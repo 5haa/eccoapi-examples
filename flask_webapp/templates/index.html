@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EccoAPI Image Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            min-height: 100vh;
+            color: #e5e5e5;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #262626;
+        }
+
+        .logo {
+            font-size: 24px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header span {
+            color: #737373;
+            font-size: 14px;
+        }
+
+        /* Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background: #171717;
+            border: 1px solid #262626;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #737373;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        /* Form Elements */
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a3a3a3;
+            margin-bottom: 6px;
+        }
+
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f0f0f;
+            border: 1px solid #262626;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 88px;
+        }
+
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #404040;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        /* Row Layout */
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Toggle */
+        .toggle-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #a3a3a3;
+        }
+
+        .toggle {
+            width: 36px;
+            height: 20px;
+            background: #262626;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .toggle.active {
+            background: #22c55e;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(16px);
+        }
+
+        /* Pro Badge */
+        .pro-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        /* Pro Section */
+        .pro-section {
+            display: none;
+            padding-top: 16px;
+            margin-top: 16px;
+            border-top: 1px solid #262626;
+        }
+
+        .pro-section.visible {
+            display: block;
+        }
+
+        /* Image Upload */
+        .upload-zone {
+            border: 1px dashed #404040;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+            color: #737373;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-zone:hover {
+            border-color: #525252;
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .images-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .image-preview {
+            width: 64px;
+            height: 64px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #262626;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .image-preview:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .image-limit {
+            font-size: 12px;
+            color: #525252;
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: #22c55e;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 16px;
+        }
+
+        .btn:hover {
+            background: #16a34a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #262626;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+        }
+
+        /* Result Panel */
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+        }
+
+        .result-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #404040;
+            font-size: 14px;
+        }
+
+        .result-image {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-image img {
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #262626;
+        }
+
+        .result-meta {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #0f0f0f;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #737373;
+        }
+
+        /* Loading */
+        .loading {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #262626;
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 13px;
+            color: #737373;
+        }
+
+        /* Error */
+        .error {
+            padding: 10px 12px;
+            background: #7f1d1d;
+            border: 1px solid #991b1b;
+            border-radius: 6px;
+            color: #fca5a5;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo">🍌</span>
+            <div>
+                <h1>EccoAPI Image Generator</h1>
+                <span>Flask Example</span>
+            </div>
+        </div>
+
+        <div class="main">
+            <!-- Controls Panel -->
+            <div class="panel">
+                <div class="panel-title">Configuration</div>
+
+                <div id="error" class="error hidden"></div>
+
+                <div class="field">
+                    <label for="prompt">Prompt</label>
+                    <textarea id="prompt"
+                        placeholder="Describe the image you want to generate...">a happy dog running in the park</textarea>
+                </div>
+
+                <div class="field">
+                    <div class="row">
+                        <div>
+                            <label for="model">Model</label>
+                            <select id="model" onchange="toggleProFeatures()">
+                                <option value="nanobanana">Nano Banana</option>
+                                <option value="nanobananapro">Nano Banana Pro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="aspectRatio">Aspect Ratio</label>
+                            <select id="aspectRatio">
+                                <option value="1:1">1:1 Square</option>
+                                <option value="16:9">16:9 Wide</option>
+                                <option value="9:16">9:16 Tall</option>
+                                <option value="4:3">4:3 Standard</option>
+                                <option value="3:4">3:4 Portrait</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="proSection" class="pro-section">
+                    <div class="field">
+                        <div class="row">
+                            <div>
+                                <label for="imageSize">Size <span class="pro-badge">Pro</span></label>
+                                <select id="imageSize">
+                                    <option value="1K">1K</option>
+                                    <option value="2K">2K</option>
+                                    <option value="4K">4K (2×)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Google Search <span class="pro-badge">Pro</span></label>
+                                <div class="toggle-field">
+                                    <span class="toggle-label">Enabled</span>
+                                    <div id="googleSearchToggle" class="toggle" onclick="toggleGoogleSearch()"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Reference Images <span id="imageLimit" class="image-limit">(1 max)</span></label>
+                    <div id="imagesGrid" class="images-grid"></div>
+                    <div class="upload-zone" onclick="document.getElementById('imageInput').click()">
+                        <input type="file" id="imageInput" accept="image/*" multiple
+                            onchange="handleImageUpload(event)">
+                        <span>Click to add images</span>
+                    </div>
+                </div>
+
+                <button id="generateBtn" class="btn" onclick="generateImage()">Generate Image</button>
+            </div>
+
+            <!-- Result Panel -->
+            <div class="panel result-panel">
+                <div class="panel-title">Result</div>
+
+                <div id="placeholder" class="result-placeholder">
+                    Result will appear here
+                </div>
+
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <span class="loading-text">Generating image...</span>
+                </div>
+
+                <div id="result" class="result-image hidden">
+                    <img id="resultImage" alt="Generated Image">
+                    <div id="metaInfo" class="result-meta"></div>
+                    <button class="btn btn-secondary" onclick="downloadImage()">Download Image</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let generatedImageData = null;
+        let generatedMimeType = 'image/png';
+        let uploadedImages = [];
+        let useGoogleSearch = false;
+
+        function getMaxImages() {
+            return document.getElementById('model').value === 'nanobananapro' ? 14 : 1;
+        }
+
+        function toggleProFeatures() {
+            const model = document.getElementById('model').value;
+            const proSection = document.getElementById('proSection');
+            const imageLimit = document.getElementById('imageLimit');
+
+            if (model === 'nanobananapro') {
+                proSection.classList.add('visible');
+                imageLimit.textContent = '(up to 14)';
+            } else {
+                proSection.classList.remove('visible');
+                imageLimit.textContent = '(1 max)';
+                if (uploadedImages.length > 1) {
+                    uploadedImages = uploadedImages.slice(0, 1);
+                    renderImagePreviews();
+                }
+            }
+        }
+
+        function toggleGoogleSearch() {
+            useGoogleSearch = !useGoogleSearch;
+            document.getElementById('googleSearchToggle').classList.toggle('active', useGoogleSearch);
+        }
+
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            const maxImages = getMaxImages();
+
+            for (let i = 0; i < files.length && uploadedImages.length < maxImages; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const base64 = e.target.result.split(',')[1];
+                    uploadedImages.push({
+                        data: base64,
+                        mimeType: file.type || 'image/jpeg',
+                        preview: e.target.result
+                    });
+                    renderImagePreviews();
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            event.target.value = '';
+        }
+
+        function renderImagePreviews() {
+            const grid = document.getElementById('imagesGrid');
+            grid.innerHTML = uploadedImages.map((img, idx) => `
+                <div class="image-preview">
+                    <img src="${img.preview}" alt="Image ${idx + 1}">
+                    <button class="remove-btn" onclick="removeImage(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const model = document.getElementById('model').value;
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            const imageSize = document.getElementById('imageSize').value;
+
+            if (!prompt) {
+                showError('Please enter a prompt');
+                return;
+            }
+
+            hideError();
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                const body = {
+                    prompt: prompt,
+                    model: model,
+                    aspectRatio: aspectRatio
+                };
+
+                if (model === 'nanobananapro') {
+                    body.imageSize = imageSize;
+                    body.useGoogleSearch = useGoogleSearch;
+                }
+
+                if (uploadedImages.length > 0) {
+                    body.images = uploadedImages.map(img => ({
+                        data: img.data,
+                        mimeType: img.mimeType
+                    }));
+                }
+
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Generation failed');
+                }
+
+                generatedImageData = result.image;
+                generatedMimeType = result.mimeType || 'image/png';
+
+                document.getElementById('resultImage').src = `data:${generatedMimeType};base64,${result.image}`;
+
+                const meta = result.meta || {};
+                document.getElementById('metaInfo').innerHTML =
+                    `Model: ${meta.model || model} · Cost: $${meta.cost || '0.01'} · Balance: $${(meta.remaining_credits || 0).toFixed(4)}`;
+
+                document.getElementById('result').classList.remove('hidden');
+
+            } catch (error) {
+                showError(error.message);
+                document.getElementById('placeholder').classList.remove('hidden');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function downloadImage() {
+            if (!generatedImageData) return;
+            const link = document.createElement('a');
+            link.href = `data:${generatedMimeType};base64,${generatedImageData}`;
+            link.download = `generated-${Date.now()}.png`;
+            link.click();
+        }
+    </script>
+</body>
+
+</html>
